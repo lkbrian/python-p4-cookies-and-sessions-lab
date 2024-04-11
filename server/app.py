@@ -31,14 +31,24 @@ def index_articles():
 @app.route("/articles/<int:id>")
 def show_article(id):
 
-    views = session.get("page_views", 0)
-    views += 1
-    if views > 3:
-        body = {"message": "Maximum pageview limit reached"}
-        return make_response(body, 401)
+    session['page_views'] = session.get('page_views', 0) + 1
 
-    article = Article.query.filter(Article.id == id).first()
-    return jsonify(article.to_dict(), 200)
+    if session['page_views'] > 3:
+        body = {"message": "Maximum pageview limit reached"}
+        response = make_response(jsonify(body), 401)
+    else:
+        article = Article.query.filter(Article.id == id).first()
+        response = jsonify(article.to_dict())
+
+    response.set_cookie('page_views', str(session['page_views']))
+
+    return response
+    # views = session.get("page_views", 0)    
+    # views += 1
+    # body = {"message": "Maximum pageview limit reached"}
+    # article = Article.query.filter(Article.id == id).first()
+    # return make_response(body, 401) if views > 3 else make_response(article, 401)
+
 
 
 if __name__ == "__main__":
